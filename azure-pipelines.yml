@@ -66,7 +66,7 @@ jobs:
     condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
     inputs:
       ConnectionType: 'AzureRM'
-      azureSubscription: 'Pay-As-You-Go(0518cd5b-d389-4983-9496-cdcae31dcc60)'
+      azureSubscription: 'Pay-As-You-Go(1)(0518cd5b-d389-4983-9496-cdcae31dcc60)'
       appType: 'webApp'
       WebAppName: '2006-kitchen-api'
       packageForLinux: '$(System.DefaultWorkingDirectory)/publish'
