@@ -1,0 +1,72 @@
+trigger:
+- master
+
+pr:
+- master
+
+variables:
+  solutionPath: KitchenService
+
+jobs:
+- job: build
+  pool:
+    vmImage: 'ubuntu-latest'
+
+  steps:
+  - task: UseDotNet@2
+    inputs:
+      packageType: 'sdk'
+      version: '3.x'
+
+  - task: SonarCloudPrepare@1
+    displayName: sonarcloud prepare analysis
+    inputs:
+      SonarCloud: 'sonarcloud-escalonn'
+      organization: '2006-jun15-net'
+      scannerMode: 'MSBuild'
+      projectKey: '2006-jun15-net_nick-project2-kitchen-api'
+      extraProperties: |
+        sonar.exclusions=**/lib/**
+        sonar.cs.vstest.reportsPaths=$(Agent.TempDirectory)/*.trx
+        sonar.cs.opencover.reportsPaths=$(Agent.TempDirectory)/*/coverage.opencover.xml
+
+  - script: dotnet build -c Release
+    displayName: dotnet build
+    workingDirectory: $(solutionPath)
+
+  - task: DotNetCoreCLI@2
+    displayName: dotnet test
+    inputs:
+      command: 'test'
+      projects: '$(solutionPath)'
+      arguments: '-c Release --collect:"XPlat Code Coverage" -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura,opencover'
+      testRunTitle: 'ubuntu'
+
+  - task: SonarCloudAnalyze@1
+    displayName: sonarcloud run analysis
+
+  - task: SonarCloudPublish@1
+    displayName: publish sonarcloud result
+    inputs:
+      pollingTimeoutSec: '300'
+
+  - task: PublishCodeCoverageResults@1
+    displayName: publish code coverage
+    inputs:
+      codeCoverageTool: 'Cobertura'
+      summaryFileLocation: '$(Agent.TempDirectory)/*/coverage.cobertura.xml'
+      failIfCoverageEmpty: true
+
+  - script: dotnet publish -c Release -o ../publish
+    displayName: dotnet publish
+    workingDirectory: $(solutionPath)
+
+  - task: AzureRmWebAppDeployment@4
+    displayName: azure app service deploy
+    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
+    inputs:
+      ConnectionType: 'AzureRM'
+      azureSubscription: 'Pay-As-You-Go(0518cd5b-d389-4983-9496-cdcae31dcc60)'
+      appType: 'webApp'
+      WebAppName: '2006-kitchen-api'
+      packageForLinux: '$(System.DefaultWorkingDirectory)/publish'
