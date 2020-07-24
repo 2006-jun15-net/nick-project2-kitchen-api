@@ -4,22 +4,21 @@ trigger:
 pr:
 - master
 
+variables:
+  sdkVersion: 3.1.x
+  buildConfiguration: Release
+  solutionPath: KitchenService
+  startupProjectPath: KitchenService/KitchenService.Api
+
 stages:
 
 - stage: build
-
-  variables:
-    sdkVersion: 3.1.x
-    buildConfiguration: Release
-    solutionPath: KitchenService
-    startupProjectPath: KitchenService/KitchenService.Api
+  pool:
+    vmImage: ubuntu-latest
 
   jobs:
 
-  - job: build
-
-    pool:
-      vmImage: ubuntu-latest
+  - job: job
 
     steps:
 
@@ -50,10 +49,14 @@ stages:
       artifact: app
       displayName: artifact publish app
 
-  - job: test
+- stage: analyze
+  dependsOn: []
+  pool:
+    vmImage: ubuntu-latest
 
-    pool:
-      vmImage: ubuntu-latest
+  jobs:
+
+  - job: job
 
     steps:
 
@@ -115,14 +118,15 @@ stages:
 
 - stage: deploy
   condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
-  dependsOn: build
+  dependsOn:
+  - build
+  - analysis
+  pool:
+    vmImage: ubuntu-latest
 
   jobs:
 
-  - deployment: deploy
-
-    pool:
-      vmImage: ubuntu-latest
+  - deployment: dev
 
     environment: dev
 
