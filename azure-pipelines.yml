@@ -18,7 +18,7 @@ stages:
 
   jobs:
 
-  - job: job
+  - job: build
 
     steps:
 
@@ -56,7 +56,7 @@ stages:
 
   jobs:
 
-  - job: job
+  - job: analyze
 
     steps:
 
@@ -126,7 +126,7 @@ stages:
 
   jobs:
 
-  - deployment: dev
+  - deployment: deploy_dev
 
     environment: dev
 
