@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using KitchenService.Api.Models;
+using System.Threading.Tasks;
+using KitchenService.Api.ApiModels;
+using KitchenService.Core;
+using KitchenService.Core.Interfaces;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-
-// For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
 namespace KitchenService.Api.Controllers
 {
@@ -13,60 +14,68 @@ namespace KitchenService.Api.Controllers
     [ApiController]
     public class FridgeController : ControllerBase
     {
-        private static readonly List<FoodItem> s_contents = new List<FoodItem>
+        private readonly IFridgeItemRepository _fridgeItemRepository;
+
+        public FridgeController(IFridgeItemRepository fridgeItemRepository)
         {
-            new FoodItem { Id = 1, Name = "cheese", ExpirationDate = new DateTime(2020, 6, 14) },
-            new FoodItem { Id = 2, Name = "steak", ExpirationDate = new DateTime(2020, 7, 28) },
-            new FoodItem { Id = 3, Name = "salmon", ExpirationDate = new DateTime(2020, 7, 28) }
-        };
+            _fridgeItemRepository = fridgeItemRepository;
+        }
 
         // GET: api/fridge/items
         [HttpGet("items")]
-        public IActionResult GetItems()
+        public async Task<IActionResult> GetItemsAsync()
         {
-            return Ok(s_contents);
+            IEnumerable<Core.FridgeItem> items = await _fridgeItemRepository.GetAsync();
+            var resource = items.Select(Map);
+
+            return Ok(resource);
         }
 
         // GET api/fridge/items/5
         [HttpGet("items/{id}")]
-        public ActionResult<FoodItem> GetItem(int id)
+        public async Task<IActionResult> GetItemAsync(int id)
         {
-            if (s_contents.FirstOrDefault(x => x.Id == id) is FoodItem item)
+            if (await _fridgeItemRepository.GetAsync(id) is FridgeItem item)
             {
-                return item;
+                return Ok(item);
             }
-            //return StatusCode(418, new object());
             return NotFound();
-            //return Content("<!doctype html><p>data</p>", "application/html", Encoding.UTF8);
         }
 
         // POST api/fridge/items
         [HttpPost("items")]
-        [ProducesResponseType(StatusCodes.Status409Conflict)]
         [ProducesResponseType(typeof(FoodItem), StatusCodes.Status201Created)]
-        public IActionResult PostItem([FromBody] FoodItem item)
+        public async Task<IActionResult> PostItemAsync([FromBody, Bind("Name,ExpirationDate")] FoodItem resource)
         {
-            if (s_contents.Any(x => x.Id == item.Id))
+            var item = new FridgeItem
             {
-                return Conflict();
-            }
-            s_contents.Add(item);
+                Name = resource.Name,
+                ExpirationDate = resource.ExpirationDate
+            };
+
+            var id = await _fridgeItemRepository.CreateAsync(item);
+
+            var created = new FoodItem
+            {
+                Id = id,
+                Name = resource.Name,
+                ExpirationDate = resource.ExpirationDate
+            };
+
             return CreatedAtAction(
-                actionName: nameof(GetItem),
+                actionName: nameof(GetItemAsync),
                 routeValues: new { id = item.Id },
-                value: item);
+                value: created);
         }
 
-        // PUT api/fridge/items/5
-        [HttpPut("items/{id}")]
-        public void PutItem(int id, [FromBody] string value)
+        private static FoodItem Map(FridgeItem item)
         {
-        }
-
-        // DELETE api/fridge/items/5
-        [HttpDelete("items/{id}")]
-        public void DeleteItem(int id)
-        {
+            return new FoodItem
+            {
+                Id = item.Id,
+                Name = item.Name,
+                ExpirationDate = item.ExpirationDate
+            };
         }
     }
 }

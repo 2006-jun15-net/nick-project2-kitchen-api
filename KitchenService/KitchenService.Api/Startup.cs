@@ -1,7 +1,11 @@
 using System.Linq;
+using KitchenService.Core.Interfaces;
+using KitchenService.DataAccess.Model;
+using KitchenService.DataAccess.Repositories;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Formatters;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -19,9 +23,15 @@ namespace KitchenService.Api
 
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddDbContext<KitchenContext>(options =>
+            {
+                options.UseSqlServer(Configuration.GetConnectionString("AzureSql"));
+            });
+
+            services.AddScoped<IFridgeItemRepository, FridgeItemRepository>();
+
             services.AddCors(options =>
             {
-                // defining the policy
                 options.AddPolicy(name: "AllowLocalNgServe",
                                   builder =>
                                   {
@@ -35,6 +45,7 @@ namespace KitchenService.Api
             services.AddControllers(options =>
             {
                 options.ReturnHttpNotAcceptable = true;
+                options.SuppressAsyncSuffixInActionNames = false;
 
                 // lower priority of text/plain among supported content types
                 var stringFormatter = options.OutputFormatters.OfType<StringOutputFormatter>().FirstOrDefault();

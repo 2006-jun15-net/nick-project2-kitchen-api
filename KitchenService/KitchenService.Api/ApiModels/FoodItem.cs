@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace KitchenService.Api.Models
+namespace KitchenService.Api.ApiModels
 {
     public class FoodItem
     {
@@ -8,6 +8,6 @@ namespace KitchenService.Api.Models
 
         public string Name { get; set; }
 
-        public DateTime ExpirationDate { get; set; }
+        public DateTimeOffset? ExpirationDate { get; set; }
     }
 }
