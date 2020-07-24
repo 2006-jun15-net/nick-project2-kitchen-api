@@ -4,76 +4,142 @@ trigger:
 pr:
 - master
 
-variables:
-  solutionPath: KitchenService
+stages:
 
-jobs:
-- job: build
-  pool:
-    vmImage: 'ubuntu-latest'
+- stage: build
 
-  steps:
-  - task: UseDotNet@2
-    displayName: dotnet sdk 2.1
-    inputs:
-      packageType: 'sdk'
-      version: '2.1.x'
+  variables:
+    sdkVersion: 3.1.x
+    buildConfiguration: Release
+    solutionPath: KitchenService
+    startupProjectPath: KitchenService/KitchenService.Api
 
-  - task: SonarCloudPrepare@1
-    displayName: sonarcloud prepare analysis
-    inputs:
-      SonarCloud: 'sonarcloud-escalonn'
-      organization: '2006-jun15-net'
-      scannerMode: 'MSBuild'
-      projectKey: '2006-jun15-net_nick-project2-kitchen-api'
-      extraProperties: |
-        sonar.exclusions=**/lib/**
-        sonar.cs.vstest.reportsPaths=$(Agent.TempDirectory)/*.trx
-        sonar.cs.opencover.reportsPaths=$(Agent.TempDirectory)/*/coverage.opencover.xml
+  jobs:
 
-  - task: UseDotNet@2
-    displayName: dotnet sdk 3
-    inputs:
-      packageType: 'sdk'
-      version: '3.x'
+  - job: build
 
-  - script: dotnet build -c Release
-    displayName: dotnet build
-    workingDirectory: $(solutionPath)
+    pool:
+      vmImage: ubuntu-latest
 
-  - task: DotNetCoreCLI@2
-    displayName: dotnet test
-    inputs:
-      command: 'test'
-      projects: '$(solutionPath)'
-      arguments: '-c Release --collect:"XPlat Code Coverage" -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura,opencover'
-      testRunTitle: 'ubuntu'
+    steps:
 
-  - task: SonarCloudAnalyze@1
-    displayName: sonarcloud run analysis
+    - task: UseDotNet@2
+      displayName: dotnet sdk $(sdkVersion)
+      inputs:
+        packageType: 'sdk'
+        version: '$(sdkVersion)'
 
-  - task: SonarCloudPublish@1
-    displayName: publish sonarcloud result
-    inputs:
-      pollingTimeoutSec: '300'
+    - script: dotnet restore
+      displayName: dotnet restore
+      workingDirectory: $(solutionPath)
 
-  - task: PublishCodeCoverageResults@1
-    displayName: publish code coverage
-    inputs:
-      codeCoverageTool: 'Cobertura'
-      summaryFileLocation: '$(Agent.TempDirectory)/*/coverage.cobertura.xml'
-      failIfCoverageEmpty: true
+    - script: dotnet build
+        --configuration $(buildConfiguration)
+        --no-restore
+      displayName: dotnet build
+      workingDirectory: $(solutionPath)
 
-  - script: dotnet publish -c Release -o ../publish
-    displayName: dotnet publish
-    workingDirectory: $(solutionPath)
+    - script: dotnet publish
+        --configuration $(buildConfiguration)
+        --no-build
+        --output $(Build.ArtifactStagingDirectory)/app
+      displayName: dotnet publish
+      workingDirectory: $(startupProjectPath)
 
-  - task: AzureRmWebAppDeployment@4
-    displayName: azure app service deploy
-    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
-    inputs:
-      ConnectionType: 'AzureRM'
-      azureSubscription: 'Pay-As-You-Go(1)(0518cd5b-d389-4983-9496-cdcae31dcc60)'
-      appType: 'webApp'
-      WebAppName: '2006-kitchen-api'
-      packageForLinux: '$(System.DefaultWorkingDirectory)/publish'
+    - publish: $(Build.ArtifactStagingDirectory)/app
+      artifact: app
+      displayName: artifact publish app
+
+  - job: test
+
+    pool:
+      vmImage: ubuntu-latest
+
+    steps:
+
+    - task: UseDotNet@2
+      displayName: dotnet sdk 2.1.x
+      inputs:
+        packageType: 'sdk'
+        version: '2.1.x'
+
+    - task: SonarCloudPrepare@1
+      displayName: sonarcloud analysis prepare
+      inputs:
+        SonarCloud: 'sonarcloud-escalonn'
+        organization: '2006-jun15-net'
+        scannerMode: 'MSBuild'
+        projectKey: '2006-jun15-net_nick-project2-kitchen-api'
+        extraProperties: |
+          sonar.cs.vstest.reportsPaths=$(Common.TestResultsDirectory)/*.trx
+          sonar.cs.opencover.reportsPaths=$(Common.TestResultsDirectory)/*/coverage.opencover.xml
+
+    - task: UseDotNet@2
+      displayName: dotnet sdk $(sdkVersion)
+      inputs:
+        packageType: 'sdk'
+        version: '$(sdkVersion)'
+
+    - script: dotnet test
+        --configuration $(buildConfiguration)
+        --collect:"XPlat Code Coverage"
+        --logger trx
+        --results-directory $(Common.TestResultsDirectory)
+        --
+        DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura,opencover
+      displayName: dotnet test
+      workingDirectory: $(solutionPath)
+
+    - task: SonarCloudAnalyze@1
+      displayName: sonarcloud analysis run
+
+    - task: PublishTestResults@2
+      displayName: test results build publish
+      condition: succeededOrFailed()
+      inputs:
+        testResultsFormat: 'VSTest'
+        testResultsFiles: '$(Common.TestResultsDirectory)/*.trx'
+
+    - task: PublishCodeCoverageResults@1
+      displayName: code coverage build publish
+      condition: succeededOrFailed()
+      inputs:
+        codeCoverageTool: 'Cobertura'
+        summaryFileLocation: '$(Common.TestResultsDirectory)/*/coverage.cobertura.xml'
+
+    - task: SonarCloudPublish@1
+      displayName: sonarcloud results build publish
+      condition: succeededOrFailed()
+      inputs:
+        pollingTimeoutSec: '300'
+
+- stage: deploy
+  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
+  dependsOn: build
+
+  jobs:
+
+  - deployment: deploy
+
+    pool:
+      vmImage: ubuntu-latest
+
+    environment: dev
+
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+
+          - download: current
+            artifact: app
+            displayName: artifact download app
+
+          - task: AzureRmWebAppDeployment@4
+            displayName: azure app service deploy
+            inputs:
+              ConnectionType: 'AzureRM'
+              azureSubscription: 'Pay-As-You-Go(1)(0518cd5b-d389-4983-9496-cdcae31dcc60)'
+              appType: 'webApp'
+              WebAppName: '2006-kitchen-api'
+              packageForLinux: '$(Pipeline.Workspace)/app'
