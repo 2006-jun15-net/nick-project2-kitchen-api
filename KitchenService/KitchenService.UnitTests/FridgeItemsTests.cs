@@ -5,6 +5,7 @@ namespace KitchenService.UnitTests
 {
     public class FridgeItemsTests
     {
+        [Fact]
         public void ConstructorConstructsWithDefaults()
         {
             var item = new FridgeItem();
