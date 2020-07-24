@@ -14,10 +14,10 @@ jobs:
 
   steps:
   - task: UseDotNet@2
-    displayName: dotnet sdk 2
+    displayName: dotnet sdk 2.1
     inputs:
       packageType: 'sdk'
-      version: '2.x'
+      version: '2.1.x'
 
   - task: SonarCloudPrepare@1
     displayName: sonarcloud prepare analysis
