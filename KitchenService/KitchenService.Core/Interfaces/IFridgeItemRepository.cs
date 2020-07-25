@@ -10,5 +10,9 @@ namespace KitchenService.Core.Interfaces
         Task<FridgeItem> GetAsync(int id);
 
         Task<int> CreateAsync(FridgeItem item);
+
+        Task<bool> DeleteAsync(int id);
+
+        Task DeleteAsync(IEnumerable<int> ids);
     }
 }

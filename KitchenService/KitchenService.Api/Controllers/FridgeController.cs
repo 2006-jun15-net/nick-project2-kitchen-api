@@ -22,29 +22,19 @@ namespace KitchenService.Api.Controllers
 
         // GET: api/fridge/items
         [HttpGet("items")]
+        [ProducesResponseType(typeof(IEnumerable<FoodItem>), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetItemsAsync()
         {
-            IEnumerable<Core.FridgeItem> items = await _fridgeItemRepository.GetAsync();
+            IEnumerable<FridgeItem> items = await _fridgeItemRepository.GetAsync();
             var resource = items.Select(Map);
 
             return Ok(resource);
         }
 
-        // GET api/fridge/items/5
-        [HttpGet("items/{id}")]
-        public async Task<IActionResult> GetItemAsync(int id)
-        {
-            if (await _fridgeItemRepository.GetAsync(id) is FridgeItem item)
-            {
-                return Ok(item);
-            }
-            return NotFound();
-        }
-
         // POST api/fridge/items
         [HttpPost("items")]
         [ProducesResponseType(typeof(FoodItem), StatusCodes.Status201Created)]
-        public async Task<IActionResult> PostItemAsync([FromBody, Bind("Name,ExpirationDate")] FoodItem resource)
+        public async Task<IActionResult> PostItemAsync([FromBody] FoodItemWithoutId resource)
         {
             var item = new FridgeItem
             {
@@ -65,6 +55,35 @@ namespace KitchenService.Api.Controllers
                 actionName: nameof(GetItemAsync),
                 routeValues: new { id = item.Id },
                 value: created);
+        }
+
+        // GET api/fridge/items/5
+        [HttpGet("items/{id}")]
+        [ProducesResponseType(typeof(FoodItem), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> GetItemAsync(int id)
+        {
+            if (await _fridgeItemRepository.GetAsync(id) is FridgeItem item)
+            {
+                return Ok(item);
+            }
+            return NotFound();
+        }
+
+        // POST: api/fridge/clean
+        [HttpPost("clean")]
+        [ProducesResponseType(typeof(IEnumerable<FoodItemWithoutId>), StatusCodes.Status200OK)]
+        public async Task<IActionResult> CleanAsync([FromServices] IFridgeService fridgeService)
+        {
+            IEnumerable<FridgeItem> removed = await fridgeService.CleanAsync();
+
+            var removedResources = removed.Select(i => new FoodItemWithoutId
+            {
+                Name = i.Name,
+                ExpirationDate = i.ExpirationDate
+            });
+
+            return Ok(removedResources);
         }
 
         private static FoodItem Map(FridgeItem item)

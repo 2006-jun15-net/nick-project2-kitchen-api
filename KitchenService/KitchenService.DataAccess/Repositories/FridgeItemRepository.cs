@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using KitchenService.Core.Interfaces;
@@ -18,7 +19,7 @@ namespace KitchenService.DataAccess.Repositories
 
         public async Task<IEnumerable<Core.FridgeItem>> GetAsync()
         {
-            List<Model.FridgeItem> items = await _context.FridgeItems
+            List<FridgeItem> items = await _context.FridgeItems
                 .ToListAsync();
 
             return items.Select(Map);
@@ -49,7 +50,34 @@ namespace KitchenService.DataAccess.Repositories
             return entity.Id;
         }
 
-        private static Core.FridgeItem Map(Model.FridgeItem item)
+        public async Task<bool> DeleteAsync(int id)
+        {
+            FridgeItem item = await _context.FridgeItems.FindAsync(id);
+            if (item is null)
+            {
+                return false;
+            }
+            _context.FridgeItems.Remove(item);
+            await _context.SaveChangesAsync();
+
+            return true;
+        }
+
+        public async Task DeleteAsync(IEnumerable<int> ids)
+        {
+            var idList = ids.ToList();
+            List<FridgeItem> items = await _context.FridgeItems
+                .Where(i => ids.Contains(i.Id))
+                .ToListAsync();
+            if (items.Count != idList.Count)
+            {
+                throw new ArgumentException("Some item IDs did not exist", nameof(ids));
+            }
+            _context.FridgeItems.RemoveRange(items);
+            await _context.SaveChangesAsync();
+        }
+
+        private static Core.FridgeItem Map(FridgeItem item)
         {
             return new Core.FridgeItem
             {

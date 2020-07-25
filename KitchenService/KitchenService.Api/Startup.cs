@@ -1,4 +1,5 @@
 using System.Linq;
+using KitchenService.Core;
 using KitchenService.Core.Interfaces;
 using KitchenService.DataAccess.Model;
 using KitchenService.DataAccess.Repositories;
@@ -29,6 +30,7 @@ namespace KitchenService.Api
             });
 
             services.AddScoped<IFridgeItemRepository, FridgeItemRepository>();
+            services.AddScoped<IFridgeService, FridgeService>();
 
             services.AddCors(options =>
             {
