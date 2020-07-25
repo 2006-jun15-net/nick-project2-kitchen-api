@@ -40,7 +40,6 @@ stages:
 
     - script: dotnet publish
         --configuration $(buildConfiguration)
-        --no-build
         --output $(Build.ArtifactStagingDirectory)/app
       displayName: dotnet publish
       workingDirectory: $(startupProjectPath)
@@ -83,10 +82,16 @@ stages:
         packageType: 'sdk'
         version: '$(sdkVersion)'
 
+    - script: dotnet build
+        --configuration $(buildConfiguration)
+      displayName: dotnet build
+      workingDirectory: $(solutionPath)
+
     - script: dotnet test
         --configuration $(buildConfiguration)
         --collect:"XPlat Code Coverage"
         --logger trx
+        --no-build
         --results-directory $(Common.TestResultsDirectory)
         --
         DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura,opencover

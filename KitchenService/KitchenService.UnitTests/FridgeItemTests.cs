@@ -3,7 +3,7 @@ using Xunit;
 
 namespace KitchenService.UnitTests
 {
-    public class FridgeItemsTests
+    public class FridgeItemTests
     {
         [Fact]
         public void ConstructorConstructsWithDefaults()
