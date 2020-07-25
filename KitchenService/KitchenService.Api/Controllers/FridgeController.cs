@@ -31,7 +31,7 @@ namespace KitchenService.Api.Controllers
             return Ok(resource);
         }
 
-        // POST api/fridge/items
+        // POST: api/fridge/items
         [HttpPost("items")]
         [ProducesResponseType(typeof(FoodItem), StatusCodes.Status201Created)]
         public async Task<IActionResult> PostItemAsync([FromBody] FoodItemWithoutId resource)
@@ -57,7 +57,7 @@ namespace KitchenService.Api.Controllers
                 value: created);
         }
 
-        // GET api/fridge/items/5
+        // GET: api/fridge/items/5
         [HttpGet("items/{id}")]
         [ProducesResponseType(typeof(FoodItem), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -66,6 +66,19 @@ namespace KitchenService.Api.Controllers
             if (await _fridgeItemRepository.GetAsync(id) is FridgeItem item)
             {
                 return Ok(item);
+            }
+            return NotFound();
+        }
+
+        // DELETE: api/fridge/items/5
+        [HttpDelete("items/{id}")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> DeleteItemAsync(int id)
+        {
+            if (await _fridgeItemRepository.DeleteAsync(id))
+            {
+                return NoContent();
             }
             return NotFound();
         }
