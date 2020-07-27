@@ -34,10 +34,12 @@ namespace KitchenService.Api
 
             services.AddCors(options =>
             {
-                options.AddPolicy(name: "AllowLocalNgServe",
+                options.AddPolicy(name: "AllowLocalNgServeAndAzure",
                                   builder =>
                                   {
-                                      builder.WithOrigins("http://localhost:4200")
+                                      builder.WithOrigins("http://localhost:4200",
+                                                          "http://2006-kitchen-site.azurewebsites.net",
+                                                          "https://2006-kitchen-site.azurewebsites.net")
                                           .AllowAnyMethod()
                                           .AllowAnyHeader()
                                           .AllowCredentials();
@@ -85,7 +87,7 @@ namespace KitchenService.Api
             app.UseRouting();
 
             // apply CORS policy globally
-            app.UseCors("AllowLocalNgServe");
+            app.UseCors("AllowLocalNgServeAndAzure");
 
             app.UseAuthorization();
 
