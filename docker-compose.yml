@@ -1,0 +1,37 @@
+# to run api and db in docker (debugger not possible): docker-compose up --build
+
+# to run db in docker and api outside docker (debugger possible): docker-compose up data
+#   and if you have Docker Desktop, set in user secrets: "DatabaseConnection": "NotesDbPostgreSqlDockerDesktop"
+
+# api accessible at localhost:44350 / 192.168.99.100:8000
+# db accessible at localhost:5432 / 192.168.99.100:5432
+
+version: '3.7'
+
+services:
+
+  api:
+    build:
+      context: KitchenService
+    image: proj2api:1.0
+    depends_on:
+      - data
+    ports:
+      - 44350:80
+    networks:
+      - default
+    environment:
+      ConnectionStrings__AzureSql: Server=tcp:data,1433;Initial Catalog=KitchenDb;User ID=sa;Password=Pass@word
+
+  data:
+    image: mcr.microsoft.com/mssql/server:2019-latest
+    ports:
+      - 1433:1433
+    networks:
+      - default
+    environment:
+      ACCEPT_EULA: 'Y'
+      SA_PASSWORD: Pass@word
+
+networks:
+  default:
