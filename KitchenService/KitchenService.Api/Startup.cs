@@ -65,8 +65,14 @@ namespace KitchenService.Api
             services.AddSwaggerGen();
         }
 
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, KitchenContext context)
         {
+            // code-first at runtime without migrations;
+            // if the database already exists, it does nothing
+            //    (even if the EF model doesn't match the database, there's no error)
+            // if the database doesn't exist, it wil be created according to the EF model
+            context.Database.EnsureCreated();
+
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
