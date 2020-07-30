@@ -6,7 +6,7 @@ metadata:
     app: kitchen
     role: api
 spec:
-  type: NodePort
+  type: LoadBalancer
   selector:
     app: kitchen
     role: api

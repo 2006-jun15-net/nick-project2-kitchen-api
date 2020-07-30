@@ -6,7 +6,7 @@ metadata:
     app: kitchen
     role: front
 spec:
-  replicas: 1
+  replicas: 2
   strategy:
     type: RollingUpdate
     rollingUpdate:
@@ -30,5 +30,5 @@ spec:
         - containerPort: 80
         resources:
           limits:
-            cpu: 1
+            cpu: '0.25'
             memory: 128Mi

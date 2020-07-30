@@ -27,11 +27,11 @@ spec:
         image: nicholasescalona/proj2api:1.0
         env:
         - name: ConnectionStrings__AzureSql
-          value: Server=tcp:10.96.17.233,1433;Initial Catalog=Kitchen;User ID=sa;Password=Pass@word
+          value: Server=tcp:10.0.192.186,1433;Initial Catalog=Kitchen;User ID=sa;Password=Pass@word
         imagePullPolicy: Always
         ports:
         - containerPort: 80
         resources:
           limits:
-            cpu: 1
-            memory: 512Mi
+            cpu: '0.25'
+            memory: 256Mi

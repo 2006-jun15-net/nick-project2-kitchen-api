@@ -6,7 +6,7 @@ metadata:
     app: kitchen
     role: front
 spec:
-  type: NodePort
+  type: LoadBalancer
   selector:
     app: kitchen
     role: front
