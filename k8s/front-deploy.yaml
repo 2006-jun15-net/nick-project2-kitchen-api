@@ -2,6 +2,9 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: kitchen-front
+  labels:
+    app: kitchen
+    role: front
 spec:
   replicas: 1
   strategy:

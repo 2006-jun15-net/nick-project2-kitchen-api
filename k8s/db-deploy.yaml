@@ -2,6 +2,9 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: kitchen-db
+  labels:
+    app: kitchen
+    role: db
 spec:
   replicas: 1
   strategy:
