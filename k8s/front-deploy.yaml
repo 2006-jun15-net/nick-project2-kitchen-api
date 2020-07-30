@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kitchen-front
+spec:
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+  minReadySeconds: 5
+  selector:
+    matchLabels:
+      app: kitchen
+      role: front
+  template:
+    metadata:
+      labels:
+        app: kitchen
+        role: front
+    spec:
+      containers:
+      - name: front
+        image: nicholasescalona/proj2ui:1.0
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 80
+        resources:
+          limits:
+            cpu: 1
+            memory: 128Mi

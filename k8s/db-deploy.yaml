@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kitchen-db
+spec:
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+  minReadySeconds: 5
+  selector:
+    matchLabels:
+      app: kitchen
+      role: db
+  template:
+    metadata:
+      labels:
+        app: kitchen
+        role: db
+    spec:
+      containers:
+      - name: db
+        image: mcr.microsoft.com/mssql/server:2019-latest
+        env:
+        - name: ACCEPT_EULA
+          value: 'Y'
+        - name: SA_PASSWORD
+          value: Pass@word
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 1433
+        resources:
+          limits:
+            cpu: 1
+            memory: 2Gi

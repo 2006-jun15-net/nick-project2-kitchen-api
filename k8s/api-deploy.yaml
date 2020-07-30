@@ -1,0 +1,34 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kitchen-api
+spec:
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+  minReadySeconds: 5
+  selector:
+    matchLabels:
+      app: kitchen
+      role: api
+  template:
+    metadata:
+      labels:
+        app: kitchen
+        role: api
+    spec:
+      containers:
+      - name: api
+        image: nicholasescalona/proj2api:1.0
+        env:
+        - name: ConnectionStrings__AzureSql
+          value: Server=tcp:10.96.17.233,1433;Initial Catalog=Kitchen;User ID=sa;Password=Pass@word
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 80
+        resources:
+          limits:
+            cpu: 1
+            memory: 512Mi

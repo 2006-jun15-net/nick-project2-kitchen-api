@@ -13,7 +13,7 @@ services:
   api:
     build:
       context: KitchenService
-    image: proj2api:1.0
+    image: nicholasescalona/proj2api:1.0
     depends_on:
       - data
     ports:
