@@ -1,11 +1,10 @@
-image:
-  file: .gitpod.Dockerfile
+image: gitpod/workspace-dotnet
 
 ports:
   - port: 5000
-    onOpen: open-preview
+    onOpen: open-browser
   - port: 5001
-    onOpen: open-preview
+    onOpen: open-browser
 
 tasks:
   - init: dotnet restore KitchenService
