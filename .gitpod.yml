@@ -2,4 +2,8 @@ image: gitpod/workspace-dotnet
 
 tasks:
   - init: dotnet restore KitchenService
-    command: dotnet run KitchenService/KitchenService.Api
+    command: dotnet run -p KitchenService/KitchenService.Api
+
+vscode:
+  extensions:
+    - ms-vscode.csharp@1.21.12:kw8SkO8+aVTSFug281WfQQ==
