@@ -1,0 +1,5 @@
+image: gitpod/workspace-dotnet
+
+tasks:
+  - init: dotnet restore KitchenService
+    command: dotnet run KitchenService/KitchenService.Api
