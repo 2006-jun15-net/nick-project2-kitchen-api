@@ -34,12 +34,13 @@ namespace KitchenService.Api
 
             services.AddCors(options =>
             {
-                options.AddPolicy(name: "AllowLocalNgServeAndAzure",
+                options.AddPolicy(name: "AllowLocalNgServeAndAzureAndAks",
                                   builder =>
                                   {
                                       builder.WithOrigins("http://localhost:4200",
                                                           "http://2006-kitchen-site.azurewebsites.net",
-                                                          "https://2006-kitchen-site.azurewebsites.net")
+                                                          "https://2006-kitchen-site.azurewebsites.net",
+                                                          "http://40.124.82.197")
                                           .AllowAnyMethod()
                                           .AllowAnyHeader()
                                           .AllowCredentials();
@@ -65,8 +66,14 @@ namespace KitchenService.Api
             services.AddSwaggerGen();
         }
 
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, KitchenContext context)
         {
+            // code-first at runtime without migrations;
+            // if the database already exists, it does nothing
+            //    (even if the EF model doesn't match the database, there's no error)
+            // if the database doesn't exist, it wil be created according to the EF model
+            context.Database.EnsureCreated();
+
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
@@ -87,7 +94,7 @@ namespace KitchenService.Api
             app.UseRouting();
 
             // apply CORS policy globally
-            app.UseCors("AllowLocalNgServeAndAzure");
+            app.UseCors("AllowLocalNgServeAndAzureAndAks");
 
             app.UseAuthorization();
 

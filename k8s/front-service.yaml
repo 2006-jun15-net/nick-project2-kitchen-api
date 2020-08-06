@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: kitchen-front
+  labels:
+    app: kitchen
+    role: front
+spec:
+  type: LoadBalancer
+  selector:
+    app: kitchen
+    role: front
+  ports:
+  - port: 80
