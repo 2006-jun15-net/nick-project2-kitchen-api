@@ -1,8 +1,12 @@
 image: gitpod/workspace-dotnet
 
+ports:
+  - port: 5000
+
 tasks:
+  - init: gp env ASPNETCORE_URLS="http://+:5000"
   - init: dotnet restore KitchenService
-    command: dotnet run -p KitchenService/KitchenService.Api
+  - command: dotnet run -p KitchenService/KitchenService.Api
 
 vscode:
   extensions:
